@@ -57,7 +57,7 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
     const isbn = req.params.isbn;
 
     if(!(isbn in books)){return res.status(400).send("this isbn does not exist");}
-    books[isbn].reviwes[username] = review;
+    books[isbn].reviews[username] = review;
     return res.status(300).json({message: "added review"});
 });
 
@@ -66,8 +66,9 @@ regd_users.delete("/auth/review/:isbn", (req, res) => {
     let username = req.session.username;
 
     if(!isbn in books){return res.status(400).send("this isbn does not exist");}
-    delete books[isbn].reviews[username];
-    return res.status(200).message("deletes review");
+    if(username in books[isbn].reviews)   
+        delete books[isbn].reviews[username];
+    return res.status(200).send("deleted review");
 });
 
 
