@@ -28,23 +28,39 @@ public_users.post("/register", (req,res) => {
         }
     } 
     return res.status(404).json({message: "Unable to register user."});
-    
-
 });
+
+const getBooks = new Promise((resolve, reject) => {
+    if (Object.keys(books).length > 0) {
+      resolve(books);
+    } else {
+      reject(new Error("Database: 'books' is empty."));
+    }
+});
+  
 
 // Get the book list available in the shop
 public_users.get('/',function (req, res) {
-    return res.status(200).send(JSON.stringify(books,null,4));
+    getBooks.then((books)=>{
+        return res.status(200).send(JSON.stringify(books,null,4))
+    }).catch((err)=>{
+        return res.status(400).json({error: err.message});
+    })
+    
+
 });
 
 // Get book details based on ISBN
 public_users.get('/isbn/:isbn',function (req, res) {
     let isbn = req.params.isbn;
-    if(isbn in books){
-        return res.status(200).send(books[isbn]);
-    }else {
-        return res.status(400).send('there is no book with that ISBN number.');
-    }
+    getBooks.then((books)=>{
+        if(isbn in books){
+            return res.status(200).send(books[isbn]);
+        }else {
+            return res.status(400).send('there is no book with that ISBN number.');
+        }
+    })
+    
   
 });
   
@@ -52,30 +68,35 @@ public_users.get('/isbn/:isbn',function (req, res) {
 public_users.get('/author/:author',function (req, res) {
   let author = req.params.author;
   let booksByAuthor = []
-  for (isbn in books){
-      let book = books[isbn];
-      if (book.author === author){booksByAuthor.push(book);}
-  }
-  if(booksByAuthor.length>0){
-      return res.status(200).send(booksByAuthor)
-  }else{
-      return res.status(400).send("There are no books by that author");
-  }
+  getBooks.then(books=>{
+    for (isbn in books){
+        let book = books[isbn];
+        if (book.author === author){booksByAuthor.push(book);}
+    }
+    if(booksByAuthor.length>0){
+        return res.status(200).send(booksByAuthor)
+    }else{
+        return res.status(400).send("There are no books by that author");
+    }
+  
+  });
 });
 
 // Get all books based on title
 public_users.get('/title/:title',function (req, res) {
     let title = req.params.title;
-    let booksWTitle = []
-    for (isbn in books){
-        let book = books[isbn];
-        if (book.title === title){booksWTitle.push(book);}
-    }
-    if(booksWTitle.length>0){
-        return res.status(200).send(booksWTitle)
-    }else{
-        return res.status(400).send("There are no books by that title");
-    }
+    getBooks.then(books=>{
+        let booksWTitle = []
+        for (isbn in books){
+            let book = books[isbn];
+            if (book.title === title){booksWTitle.push(book);}
+        }
+        if(booksWTitle.length>0){
+            return res.status(200).send(booksWTitle)
+        }else{
+            return res.status(400).send("There are no books by that title");
+        }    
+    })
 });
 
 //  Get book review
